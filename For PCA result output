@@ -1,0 +1,69 @@
+'Intended for the MS excel output (.xlsx) by PCA.R in the other repository
+'Need to be stored as an .xlsm file in the same folder as those targeted spradsheets
+'Standardize the format of all spreadsheets in the same file where the macro-enabled file locates
+
+Attribute VB_Name = "Module1"
+Sub ProcessFiles()
+    Dim Filename, Pathname As String
+    Dim wb As Workbook
+
+    Pathname = ActiveWorkbook.Path & "\"
+    Filename = Dir(Pathname & "*.xlsx")
+    Do While Filename <> ""
+        Set wb = Workbooks.Open(Pathname & Filename)
+        DoFormat wb
+        wb.Close SaveChanges:=True
+        Filename = Dir()
+    Loop
+End Sub
+
+Sub DoFormat(wb As Workbook)
+    With wb
+
+        Dim sh As Worksheet
+        'num_factor controls the number of columns to be painted as the dimension of PCA increases
+        num_factor = 1
+        
+        For Each sh In wb.Worksheets
+            With sh.Rows(1)
+                .Font.Bold = True
+            End With
+            
+            With sh.Columns(1)
+                .HorizontalAlignment = xlCenter
+            End With
+            
+            With sh.UsedRange
+                .Columns.AutoFit
+            End With
+            
+            'ColorIndex 34 ~ 37: indigo green yellow blue
+            With sh.UsedRange.Columns(1).Resize(, num_factor + 1)
+                .Interior.ColorIndex = 34
+            End With
+            
+            With sh.UsedRange.Columns(num_factor + 2).Resize(, 3)
+                .Interior.ColorIndex = 35
+            End With
+            
+            With sh.UsedRange.Columns(num_factor + 5).Resize(, num_factor)
+                .Interior.ColorIndex = 36
+            End With
+            
+            With sh.UsedRange.Columns(2 * num_factor + 5).Resize(, num_factor)
+                .Interior.ColorIndex = 37
+            End With
+            
+            sh.Activate
+            With ActiveWindow
+                If .FreezePanes Then .FreezePanes = False
+                .SplitColumn = 1 + num_factor
+                .SplitRow = 1
+                .FreezePanes = True
+            End With
+            
+            num_factor = num_factor + 1
+        Next sh
+        
+    End With
+End Sub
