@@ -1,0 +1,30 @@
+'SOURCE: http://www.mbaexcel.com/excel/excel-macro-to-inventory-all-of-your-tabs/
+
+Sub ExcelTabInventoryMacro()
+
+Dim wksht As Worksheet
+On Error Resume Next
+Application.DisplayAlerts = False
+NewTabName = "Tab_Inventory"
+Application.Sheets(NewTabName).Delete
+Application.Sheets.Add Application.Sheets(1)
+Set wksht = Application.ActiveSheet
+wksht.Name = NewTabName
+For i = 2 To Application.Sheets.Count
+wksht.Range("A" & (i - 1)) = Application.Sheets(i).Name
+Next
+Application.DisplayAlerts = True
+Sheets("Tab_Inventory").Select
+Rows("1:1").Select
+Selection.Insert Shift:=xlDown, CopyOrigin:=xlFormatFromLeftOrAbove
+Range("A1").Select
+ActiveCell.FormulaR1C1 = "Tab Name"
+Range("B1").Select
+ActiveCell.FormulaR1C1 = "Type"
+'Type of sheet chould be input, output, calculation etc.
+Range("C1").Select
+ActiveCell.FormulaR1C1 = "Comments"
+'Comments might include action required, additional info, "Reviewed and Confirmed", "Pending Review" etc.
+Range("A1").Select
+
+End Sub
