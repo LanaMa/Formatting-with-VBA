@@ -1,0 +1,103 @@
+' The VBA implementation of the following blog by Matthew Kuo on EXCEL visual design (well, an alternative is macro recorder)
+' http://www.mbaexcel.com/excel/how-to-make-your-excel-line-chart-look-better/
+' Thousands thumbs-ups to this site!! It makes my life so much easier.
+
+Sub FormatCharts()
+
+'Assume existing line charts are still in Excel’s default formatting
+
+Dim cht As ChartObject
+Dim ser As Series
+Dim pt As Point
+Dim p As Integer
+
+'Loop Through all charts on ActiveSheet
+  For Each cht In ActiveSheet.ChartObjects
+    'Remove Gridlines
+    cht.Chart.Axes(xlValue).MajorGridlines.Delete
+    cht.Chart.Axes(xlValue).MinorGridlines.Delete
+    
+    'Remove ChartArea border
+    cht.Chart.ChartArea.Border.LineStyle = xlNone
+
+    'Remove Legend if one series only
+    If cht.Chart.HasLegend = True Then
+      If cht.Chart.SeriesCollection.Count = 1 Then
+        cht.Chart.Legend.Delete
+      End If
+      If cht.Chart.SeriesCollection.Count = 2 Then
+        cht.Chart.Legend.Position = xlLegendPositionBottom
+      End If
+      If cht.Chart.SeriesCollection.Count > 2 Then
+        cht.Chart.Legend.Position = xlLegendPositionRight
+      End If
+    End If
+
+    'Use Soft Gray Lines for the Axes
+    cht.Chart.Axes(xlCategory).Border.Color = RGB(204, 204, 204)
+    cht.Chart.Axes(xlValue).Border.Color = RGB(204, 204, 204)
+
+    'Add an Appropriate Title and reposition it to centre
+    cht.Chart.HasTitle = True
+    cht.Chart.ChartTitle.Text = "My Graph"
+    cht.Chart.ChartTitle.Characters.Font.Size = 16
+    cht.Chart.ChartTitle.Characters.Font.Bold = msoTrue
+    cht.Chart.ChartTitle.HorizontalAlignment = xlCenter
+    
+    'Loop through all series in a chart
+    iter = 1
+    For Each ser In cht.Chart.SeriesCollection
+      
+      'Use a Non-Default Line Color (up to 5 => 5*51=255)
+      ser.Format.Line.ForeColor.RGB = RGB((iter Mod 2) * 51, iter * 51, ((iter + 4) Mod 5) * 51)
+
+      'find extreme values of series for the data label step
+      Dim vY As Variant
+      Dim dmax As Double
+      Dim dmin As Double
+      vY = ser.Values
+      dmax = vY(1)
+      For p = 2 To ser.Points.Count
+        If dmax < vY(p) Then
+          dmax = vY(p)
+        End If
+      Next
+      dmin = vY(1)
+      For p = 2 To ser.Points.Count
+        If dmin > vY(p) Then
+          dmin = vY(p)
+        End If
+      Next
+      
+      'Emphasize data points by adding marker or data label
+      For p = 1 To ser.Points.Count
+        Set pt = ser.Points(p)
+        'marker
+        pt.MarkerStyle = xlMarkerStyleCircle
+        pt.MarkerSize = 8
+        pt.MarkerBackgroundColor = RGB(255, 255, 255)
+        pt.MarkerForegroundColor = RGB((iter Mod 2) * 51, iter * 51, ((iter + 4) Mod 5) * 51)
+        pt.Format.Line.Weight = 2
+        
+        'add data label to peak and bottom
+        If vY(p) = dmax Or vY(p) = dmin Then
+          pt.ApplyDataLabels
+          pt.DataLabel.AutoText = True
+          'I can't see why I must execute autotext to make it work for the time being :(
+          pt.DataLabel.NumberFormat = "0.000"
+          pt.DataLabel.Format.TextFrame2.TextRange.Font.Bold = msoTrue
+          pt.DataLabel.Format.TextFrame2.TextRange.Font.Size = 12
+          pt.DataLabel.Position = xlLabelPositionAbove
+        End If
+        
+      Next
+      
+      'Make the Line Wider
+      ser.Border.Weight = 3
+      
+      iter = iter + 1
+    Next ser
+    
+  Next cht
+  
+End Sub
