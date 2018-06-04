@@ -1,0 +1,59 @@
+Sub MultiVarCht()
+  Dim Ws As Worksheet
+  Dim cht As Chart
+  Dim rng As Range
+  Dim iRow As Long
+  Dim iRowStart As Long
+  Dim iRowEnd As Long
+  Dim iChart As Long
+  Dim VarTag As String
+  
+  'size and position of charts
+  Const ChtHeight As Double = 3 * 72
+  'width to fit the MS Word window
+  Const ChtWidth As Double = 6.8 * 72
+  Const nChartsWide As Long = 3 'number of charts each row in the grid
+
+  Set Ws = ThisWorkbook.Worksheets("test")
+  Set rng = Selection
+
+  iRowStart = 1
+  VarTag = rng.Cells(1, 1).Value
+  
+  iChart = 1
+
+  For iRow = 1 To rng.Rows.Count
+
+    If rng.Cells(iRow + 1, 1).Value <> VarTag Then
+
+        iRowEnd = iRow
+        Set cht = ThisWorkbook.Charts.Add
+        With cht
+            .ChartType = xlColumnClustered
+            .SeriesCollection.NewSeries
+            .SeriesCollection(1).XValues = rng.Cells(iRowStart, 2).Resize(iRowEnd + 1 - iRowStart)
+            .SeriesCollection(1).Values = rng.Cells(iRowStart, 3).Resize(iRowEnd + 1 - iRowStart)
+            .HasTitle = True
+            .ChartTitle.Text = rng.Cells(iRowStart, 1).Value
+            .HasLegend = False
+            .Location Where:=xlLocationAsObject, Name:=Ws.Name
+        End With
+        'Size and position of the chart
+        With ActiveChart.Parent
+            .Height = ChtHeight
+            .Width = ChtWidth
+            .Top = ChtHeight * (Int((iChart - 1) / nChartsWide) + 1)
+            .Left = ChtWidth * ((iChart - 1) Mod nChartsWide)
+            
+        End With
+      
+      iRowStart = iRow + 1
+      VarTag = rng.Cells(iRow + 1, 1).Value
+      iChart = iChart + 1
+      
+    End If
+    
+  Next iRow
+
+
+End Sub
